@@ -35,7 +35,7 @@ NeuralNetwork_Model <- function(XTrain, YTrain, n_h = 4, alpha = 0.01, num_iters
     
     a2 <- activation(z2, type)
     
-    cost <- -(1/m) * sum((YTrain - t(a2))^2)
+    cost <- (-1/m) * sum((YTrain - t(a2))^2)
     
     dz2 <- a2 - t(YTrain)
     
@@ -93,8 +93,6 @@ NeuralNetwork_Model <- function(XTrain, YTrain, n_h = 4, alpha = 0.01, num_iters
   return(NNModel)
 }
 
-'%+%' <- dget('matrixBroadcasting/plus.R')
-
 #Run existing model against a new dataset
 Predict_SNN <- function(NNModel, XTest, YTest)
 {
@@ -117,8 +115,14 @@ NN_predict <- function(w, b, XTest, type)
   return(a2)
 }
 
+#matrix broadcasting addition
+'%+%' <- dget('matrixBroadcasting/plus.R')
+
 #Non-linear activation functions for determining classifications based on input
 activation <- dget('activation.R')
+
+#parse a dataset in a data frame into a training and sample set
+parseModelData <- dget('parseData.R')
 
 #Generate a sample model trained to recognize the type of flower in the iris sample set.
 # "setosa" = 1, "versicolor" = 2, "virginica" = 3
@@ -133,28 +137,24 @@ NN_Sample <- function(train_size = 100, n_h = 5, alpha = 0.01, num_iters = 10, a
     train_size <- 40
   }
      
-  train <- sort(sample(150, train_size))
-  test <- 1:150
-  test <- test[!(test %in% train)]
-  xTrain <- as.matrix(iris[train, 1:4])
-  yTrain <- as.matrix(as.numeric(iris[train, 5]))
-  xTest <- as.matrix(iris[test, 1:4])
-  yTest <- as.matrix(as.numeric(iris[test, 5]))
-  NNMod <- NeuralNetwork_Model(XTrain = xTrain, YTrain = yTrain, XTest = xTest, YTest = yTest, n_h = n_h, alpha = alpha, num_iters = num_iters, type = act)
+  dataset <- parseModelData(data_set = iris, x_cols = 1:4, y_cols = 5, train_size = train_size)
+  dataset$YTrain <- as.numeric(dataset$YTrain)
+  dataset$YTest <- as.numeric(dataset$YTest)
+  NNMod <- NeuralNetwork_Model(XTrain = dataset$XTrain, YTrain = dataset$YTrain, XTest = dataset$XTest, YTest = dataset$YTest, n_h = n_h, alpha = alpha, num_iters = num_iters, type = act)
   
   if(raw)
   {
-    vals <- NNMod$Model['Train_Vals']
-    vals <- ifelse(vals < 2 & abs(2-vals) < abs(1-vals), 1, ifelse(vals < 2, 2, ifelse(abs(2-vals) < abs(3-vals), 2, 3)))
-    NNMod$Model['Train_Vals'] <- vals
-    vals <- NNMod$Model['Test_Vals']
-    vals <- ifelse(vals < 2 & abs(2-vals) < abs(1-vals), 1, ifelse(vals < 2, 2, ifelse(abs(2-vals) < abs(3-vals), 2, 3)))
-    NNMod$Model['Test_Vals'] <- vals
+    vals <- NNMod[['Train_Vals']]
+    vals <- ifelse(vals <= 1, 1, ifelse(vals < 2 & abs(2-vals) < abs(1-vals), 1, ifelse(vals <= 2, 2, ifelse(abs(2-vals) < abs(3-vals), 2, 3))))
+    NNMod[['Train_Vals']] <- vals
+    vals <- NNMod[['Test_Vals']]
+    vals <- ifelse(vals <= 1, 1, ifelse(vals < 2 & abs(2-vals) < abs(1-vals), 1, ifelse(vals <= 2, 2, ifelse(abs(2-vals) < abs(3-vals), 2, 3))))
+    NNMod[['Test_Vals']] <- vals
   }
   
   if(type == "")
   {
-    return(list("XTrain" = xTrain, "YTrain" = yTrain, "XTest" = xTest, "YTest" = yTest, "Model" = NNMod))
+    return(list("XTrain" = dataset$XTrain, "YTrain" = dataset$YTrain, "XTest" = dataset$XTest, "YTest" = dataset$YTest, "Model" = NNMod))
   }
   else
   {
