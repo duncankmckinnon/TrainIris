@@ -44,7 +44,7 @@ Deep_NeuralNetwork_Model <- function(XTrain, YTrain, n_h = c(5,4,3), alpha = 0.0
       an[[i]] <- activation(zn[[i]], type)
     }
       
-    cost <- -(1/m) * sum((YTrain - t(an[[nlayers]]))^2)
+    cost <- (-1/m) * sum((YTrain - t(an[[nlayers]]))^2)
     dz[[nlayers]] <- an[[nlayers]] - t(YTrain)
     
     for(j in nlayers:2)
@@ -138,6 +138,8 @@ Deep_NN_predict <- function(w, b, XTest, layers, type)
 #Non-linear activation functions for determining classifications based on input
 activation <- dget('activation.R')
 
+#parse a dataset in a data frame into a training and sample set
+parseModelData <- dget('parseData.R')
 
 #Generate a sample model trained to recognize the type of flower in the iris sample set.
 # "setosa" = 1, "versicolor" = 2, "virginica" = 3
@@ -153,28 +155,24 @@ Deep_NN_Sample <- function(train_size = 100, n_h = c(5,4,3), alpha = 0.01, num_i
     train_size <- 40
   }
   
-  train <- sort(sample(150, train_size))
-  test <- 1:150
-  test <- test[!(test %in% train)]
-  xTrain <- as.matrix(iris[train, 1:4])
-  yTrain <- as.matrix(as.numeric(iris[train, 5]))
-  xTest <- as.matrix(iris[test, 1:4])
-  yTest <- as.matrix(as.numeric(iris[test, 5]))
-  DNNMod <- Deep_NeuralNetwork_Model(XTrain = xTrain, YTrain = yTrain, XTest = xTest, YTest = yTest, alpha = alpha, num_iters = num_iters, n_h = n_h, type = activation)
+  dataset <- parseModelData(data_set = iris, x_cols = 1:4, y_cols = 5, train_size = train_size)
+  dataset$YTrain <- as.numeric(dataset$YTrain)
+  dataset$YTest <- as.numeric(dataset$YTest)
+  DNNMod <- Deep_NeuralNetwork_Model(XTrain = dataset$XTrain, YTrain = dataset$YTrain, XTest = dataset$XTest, YTest = dataset$YTest, alpha = alpha, num_iters = num_iters, n_h = n_h, type = activation)
   
   if(raw)
   {
-    vals <- DNNMod$Model['Train_Vals']
+    vals <- DNNMod[['Train_Vals']]
     vals <- ifelse(vals < 2 & abs(2-vals) < abs(1-vals), 1, ifelse(vals < 2, 2, ifelse(abs(2-vals) < abs(3-vals), 2, 3)))
-    DNNMod$Model['Train_Vals'] <- vals
-    vals <- DNNMod$Model['Test_Vals']
+    DNNMod[['Train_Vals']] <- vals
+    vals <- DNNMod[['Test_Vals']]
     vals <- ifelse(vals < 2 & abs(2-vals) < abs(1-vals), 1, ifelse(vals < 2, 2, ifelse(abs(2-vals) < abs(3-vals), 2, 3)))
-    DNNMod$Model['Test_Vals'] <- vals
+    DNNMod[['Test_Vals']] <- vals
   }
   
   if(type == "")
   {
-    return(list("XTrain" = xTrain, "YTrain" = yTrain, "XTest" = xTest, "YTest" = yTest, "Model" = DNNMod))
+    return(list("XTrain" = dataset$XTrain, "YTrain" = dataset$YTrain, "XTest" = dataset$XTest, "YTest" = dataset$YTest, "Model" = DNNMod))
   }
   else
   {

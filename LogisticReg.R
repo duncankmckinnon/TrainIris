@@ -88,6 +88,9 @@ LRMod_predict <- function(w, b, XTest, raw = F)
 #Non-linear activation functions for determining classifications based on input
 activation <- dget('activation.R')
 
+#parse a dataset in a data frame into a training and sample set
+parseModelData <- dget('parseData.R')
+
 #Generate a sample model trained to differentiate between flowers in the iris sample set.
 #type = c("setosa", "versicolor", "virginica")
 LR_Sample <- function(train_size = 100, alpha = 0.01, num_iters = 10, raw = F, set = "versicolor", type = "")
@@ -101,18 +104,14 @@ LR_Sample <- function(train_size = 100, alpha = 0.01, num_iters = 10, raw = F, s
     train_size <- 40
   }
   
-  train <- sort(sample(150, train_size))
-  test <- 1:150
-  test <- test[!(test %in% train)]
-  xTrain <- as.matrix(iris[train, 1:4])
-  yTrain <- as.matrix(ifelse(iris[train, 5] %in% set, 1, 0))
-  xTest <- as.matrix(iris[test, 1:4])
-  yTest <- as.matrix(ifelse(iris[test, 5] %in% set, 1, 0))
-  LRMod <- LogisticRegression_Model(XTrain = xTrain, YTrain = yTrain, XTest = xTest, YTest = yTest, alpha = alpha, num_iters = num_iters, raw = raw)
+  dataset <- parseModelData(data_set = iris, x_cols = 1:4, y_cols = 5, train_size = train_size)
+  dataset$YTrain <- as.numeric(dataset$YTrain %in% set)
+  dataset$YTest <- as.numeric(dataset$YTest %in% set)
+  LRMod <- LogisticRegression_Model(XTrain = dataset$XTrain, YTrain = dataset$YTrain, XTest = dataset$XTest, YTest = dataset$YTest, alpha = alpha, num_iters = num_iters, raw = raw)
   
   if(type == "")
   {
-    return(list("XTrain" = xTrain, "YTrain" = yTrain, "XTest" = xTest, "YTest" = yTest, "Model" = LRMod))
+    return(list("XTrain" = dataset$XTrain, "YTrain" = dataset$YTrain, "XTest" = dataset$XTest, "YTest" = dataset$YTest, "Model" = LRMod))
   }
   else
   {
