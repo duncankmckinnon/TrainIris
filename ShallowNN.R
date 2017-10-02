@@ -35,7 +35,7 @@ NeuralNetwork_Model <- function(XTrain, YTrain, n_h = 4, alpha = 0.01, num_iters
     
     a2 <- activation(z2, type)
     
-    cost <- (-1/m) * sum((YTrain - t(a2))^2)
+    cost <- (1/m) * sum((YTrain - t(a2))^2)
     
     dz2 <- a2 - t(YTrain)
     
@@ -126,7 +126,7 @@ parseModelData <- dget('parseData.R')
 
 #Generate a sample model trained to recognize the type of flower in the iris sample set.
 # "setosa" = 1, "versicolor" = 2, "virginica" = 3
-NN_Sample <- function(train_size = 100, n_h = 5, alpha = 0.01, num_iters = 10, act= "ReLU", type = "", raw = T)
+NN_Sample <- function(train_size = 100, n_h = 5, alpha = 0.01, num_iters = 10, act= "ReLU", type = "", raw = F)
 {
   if(train_size > 140)
   {
@@ -142,7 +142,7 @@ NN_Sample <- function(train_size = 100, n_h = 5, alpha = 0.01, num_iters = 10, a
   dataset$YTest <- as.numeric(dataset$YTest)
   NNMod <- NeuralNetwork_Model(XTrain = dataset$XTrain, YTrain = dataset$YTrain, XTest = dataset$XTest, YTest = dataset$YTest, n_h = n_h, alpha = alpha, num_iters = num_iters, type = act)
   
-  if(raw)
+  if(!raw)
   {
     vals <- NNMod[['Train_Vals']]
     vals <- ifelse(vals <= 1, 1, ifelse(vals < 2 & abs(2-vals) < abs(1-vals), 1, ifelse(vals <= 2, 2, ifelse(abs(2-vals) < abs(3-vals), 2, 3))))

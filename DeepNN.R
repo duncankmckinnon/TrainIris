@@ -44,7 +44,7 @@ Deep_NeuralNetwork_Model <- function(XTrain, YTrain, n_h = c(5,4,3), alpha = 0.0
       an[[i]] <- activation(zn[[i]], type)
     }
       
-    cost <- (-1/m) * sum((YTrain - t(an[[nlayers]]))^2)
+    cost <- (1/m) * sum((YTrain - t(an[[nlayers]]))^2)
     dz[[nlayers]] <- an[[nlayers]] - t(YTrain)
     
     for(j in nlayers:2)
@@ -109,7 +109,7 @@ Deep_NeuralNetwork_Model <- function(XTrain, YTrain, n_h = c(5,4,3), alpha = 0.0
 Predict_DNN <- function(Deep_NNModel, XTest, YTest)
 {
   pred <- Deep_NN_predict(Deep_NNModel$w, Deep_NNModel$b, XTest, YTest, Deep_NNModel$activation)
-  accuracy_Test <- 1 - sum(abs(t(YTest) - pred_Test)) / length(YTest)
+  accuracy_Test <- 1 - sum(abs(YTest - pred_Test)) / length(YTest)
   predModel <- list("Values" = pred, "Accuracy" = accuracy_Test)
 }
 
@@ -143,7 +143,7 @@ parseModelData <- dget('parseData.R')
 
 #Generate a sample model trained to recognize the type of flower in the iris sample set.
 # "setosa" = 1, "versicolor" = 2, "virginica" = 3
-Deep_NN_Sample <- function(train_size = 100, n_h = c(5,4,3), alpha = 0.01, num_iters = 10,  activation = "ReLU", type = "", raw = T)
+Deep_NN_Sample <- function(train_size = 100, n_h = c(5,4,3), alpha = 0.01, num_iters = 10,  act = "ReLU", type = "", raw = F)
 {
   
   if(train_size > 140)
@@ -158,9 +158,9 @@ Deep_NN_Sample <- function(train_size = 100, n_h = c(5,4,3), alpha = 0.01, num_i
   dataset <- parseModelData(data_set = iris, x_cols = 1:4, y_cols = 5, train_size = train_size)
   dataset$YTrain <- as.numeric(dataset$YTrain)
   dataset$YTest <- as.numeric(dataset$YTest)
-  DNNMod <- Deep_NeuralNetwork_Model(XTrain = dataset$XTrain, YTrain = dataset$YTrain, XTest = dataset$XTest, YTest = dataset$YTest, alpha = alpha, num_iters = num_iters, n_h = n_h, type = activation)
+  DNNMod <- Deep_NeuralNetwork_Model(XTrain = dataset$XTrain, YTrain = dataset$YTrain, XTest = dataset$XTest, YTest = dataset$YTest, alpha = alpha, num_iters = num_iters, n_h = n_h, type = act)
   
-  if(raw)
+  if(!raw)
   {
     vals <- DNNMod[['Train_Vals']]
     vals <- ifelse(vals <= 1, 1, ifelse(vals < 2 & abs(2-vals) < abs(1-vals), 1, ifelse(vals <= 2, 2, ifelse(abs(2-vals) < abs(3-vals), 2, 3))))
