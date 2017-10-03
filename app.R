@@ -104,7 +104,7 @@ server <- function(input, output) {
   
     output$performtable <- renderTable(
     {
-      return(data.frame('Training Accuracy' = unlist(model_data()$Model['Train_Per']), 'Testing Accuracy' = unlist(model_data()$Model['Test_Per'])))
+      return(data.frame('Training Accuracy' = unlist(model_data()$Model['Train_Per']), 'Training Correlation' = unlist(model_data()$Model['Train_Cor']), 'Testing Accuracy' = unlist(model_data()$Model['Test_Per']), 'Testing Correlation' = unlist(model_data()$Model['Test_Cor'])))
       #model_data()$Model['w']
       #model_data()$Model['b']
     })

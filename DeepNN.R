@@ -28,6 +28,7 @@ Deep_NeuralNetwork_Model <- function(XTrain, YTrain, n_h = c(5,4,3), alpha = 0.0
     m <- dim(XTrain)[2]
     zn <- list()
     an <- list()
+    da <- list()
     dz <- list()
     dw <- list()
     db <- list()
@@ -53,7 +54,7 @@ Deep_NeuralNetwork_Model <- function(XTrain, YTrain, n_h = c(5,4,3), alpha = 0.0
     
       db[[j]] <- (1/m) * colSums(t(dz[[j]]))
       
-      dz[[j-1]] <- (t(w[[j]]) %*% dz[[j]]) * activation(zn[[j-1]], type, T)
+      dz[[j-1]] <- (t(w[[j]]) %*% dz[[j]]) * activation(zn[[j-1]], type, deriv = T)
     }
     
     dw[[1]] <- (1/m) * dz[[1]] %*% t(XTrain)
@@ -79,7 +80,7 @@ Deep_NeuralNetwork_Model <- function(XTrain, YTrain, n_h = c(5,4,3), alpha = 0.0
   for(i in 2:length(nvals))
   {
     w[[i-1]] <- matrix((sample(100, nvals[i-1] * nvals[i], T) - 50) * 0.01 , nvals[i], nvals[i-1])
-    b[[i-1]] <- matrix((sample(100, nvals[i], T) - 50) * 0.01, nvals[i], 1)
+    b[[i-1]] <- matrix(0, nvals[i], 1)
   }
   
   
@@ -89,8 +90,9 @@ Deep_NeuralNetwork_Model <- function(XTrain, YTrain, n_h = c(5,4,3), alpha = 0.0
   #get predictions and accuracy for training examples
   pred_Train <- as.matrix(Deep_NN_predict(vals$w, vals$b, XTrain, n, type), nrow = 1)
   accuracy_Train <- 1 - sum(abs(t(YTrain) - pred_Train)) / length(YTrain)
+  cor_Train <- cor.test(t(YTrain), pred_Train)$estimate
   
-  NNModel <- list("w" = vals$w, "b" = vals$b, "costs" = vals$costs, "activation" = type, "Train_Per" = accuracy_Train, "Train_Vals" = pred_Train)
+  NNModel <- list("w" = vals$w, "b" = vals$b, "costs" = vals$costs, "activation" = type, "Train_Per" = accuracy_Train, "Train_Cor" = cor_Train, "Train_Vals" = pred_Train)
   
   #get predictions and accuracy for testing examples
   if(!is.null(XTest) && !is.null(YTest))
@@ -99,7 +101,9 @@ Deep_NeuralNetwork_Model <- function(XTrain, YTrain, n_h = c(5,4,3), alpha = 0.0
     YTest <- as.matrix(YTest)
     pred_Test <- as.matrix(Deep_NN_predict(vals$w, vals$b, XTest, n, type), nrow = 1)
     accuracy_Test <- 1 - sum(abs(t(YTest) - pred_Test)) / length(YTest)
+    cor_Test <- cor.test(t(YTest), pred_Test)$estimate
     NNModel[["Test_Per"]] = accuracy_Test
+    NNModel[["Test_Cor"]] = cor_Test
     NNModel[["Test_Vals"]] = pred_Test 
   }
   return(NNModel)
@@ -109,8 +113,10 @@ Deep_NeuralNetwork_Model <- function(XTrain, YTrain, n_h = c(5,4,3), alpha = 0.0
 Predict_DNN <- function(Deep_NNModel, XTest, YTest)
 {
   pred <- Deep_NN_predict(Deep_NNModel$w, Deep_NNModel$b, XTest, YTest, Deep_NNModel$activation)
-  accuracy_Test <- 1 - sum(abs(YTest - pred_Test)) / length(YTest)
-  predModel <- list("Values" = pred, "Accuracy" = accuracy_Test)
+  accuracy_Test <-  1 - sum(abs(t(YTest) - pred_Test)) / length(YTest)
+  cor_Test <- cor.test(t(YTest), pred_Test)$estimate
+  predModel <- list("Values" = pred, "Accuracy" = accuracy_Test, "Correlation" = cor_Test)
+  return(predModel)
 }
 
 #Get prediction results for a set of parameters and data

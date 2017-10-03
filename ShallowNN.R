@@ -43,7 +43,7 @@ NeuralNetwork_Model <- function(XTrain, YTrain, n_h = 4, alpha = 0.01, num_iters
     
     db2 <- (1/m) * colSums(t(dz2))
     
-    dz1 <- (t(w[[2]]) %*% dz2) * activation(z1, type, T)
+    dz1 <- (t(w[[2]]) %*% dz2) * activation(z1, type, deriv = T)
     
     dw1 <- (1/m) * dz1 %*% t(XTrain)
     
@@ -67,7 +67,7 @@ NeuralNetwork_Model <- function(XTrain, YTrain, n_h = 4, alpha = 0.01, num_iters
   for(i in 2:length(n))
   {
     w[[i-1]] <- matrix((sample(100, n[i-1] * n[i], T) - 50) * 0.01 , n[i], n[i-1])
-    b[[i-1]] <- matrix((sample(100, n[i], T) - 50) * 0.01, n[i], 1)
+    b[[i-1]] <- matrix(0, n[i], 1)
   }
   
   
@@ -77,8 +77,9 @@ NeuralNetwork_Model <- function(XTrain, YTrain, n_h = 4, alpha = 0.01, num_iters
 #get predictions and accuracy for training examples
   pred_Train <- as.matrix(NN_predict(vals$w, vals$b, XTrain, type), nrow = 1)
   accuracy_Train <- 1 - sum(abs(t(YTrain) - pred_Train)) / length(YTrain)
+  cor_Train <- cor.test(t(YTrain), pred_Train)$estimate
     
-  NNModel <- list("w" = vals$w, "b" = vals$b, "costs" = vals$costs, "activation" = type, "Train_Per" = accuracy_Train, "Train_Vals" = pred_Train)
+  NNModel <- list("w" = vals$w, "b" = vals$b, "costs" = vals$costs, "activation" = type, "Train_Per" = accuracy_Train, "Train_Cor" = cor_Train, "Train_Vals" = pred_Train)
   
 #get predictions and accuracy for testing examples
   if(!is.null(XTest) && !is.null(YTest))
@@ -86,8 +87,10 @@ NeuralNetwork_Model <- function(XTrain, YTrain, n_h = 4, alpha = 0.01, num_iters
     XTest <- t(as.matrix(XTest))
     YTest <- as.matrix(YTest)
     pred_Test <- as.matrix(NN_predict(vals$w, vals$b, XTest, type), nrow = 1)
-    accuracy_Test <- 1 - sum(abs(t(YTest) - pred_Test)) / length(YTest)
+    accuracy_Test <-  1 - sum(abs(t(YTest) - pred_Test)) / length(YTest)
+    cor_Test <- cor.test(t(YTest), pred_Test)$estimate
     NNModel[["Test_Per"]] = accuracy_Test
+    NNModel[["Test_Cor"]] = cor_Test
     NNModel[["Test_Vals"]] = pred_Test 
   }
   return(NNModel)
@@ -97,8 +100,10 @@ NeuralNetwork_Model <- function(XTrain, YTrain, n_h = 4, alpha = 0.01, num_iters
 Predict_SNN <- function(NNModel, XTest, YTest)
 {
   pred <- NN_predict(NNModel$w, NNModel$b, XTest, YTest, NNModel$activation)
-  accuracy_Test <- 1 - sum(abs(t(YTest) - pred_Test)) / length(YTest)
-  predModel <- list("Values" = pred, "Accuracy" = accuracy_Test)
+  accuracy_Test <-  1 - sum(abs(t(YTest) - pred_Test)) / length(YTest)
+  cor_Test <- cor.test(t(YTest), pred_Test)$estimate
+  predModel <- list("Values" = pred, "Accuracy" = accuracy_Test, "Correlation" = cor_Test)
+  return(predModel)
 }
 
 #Get prediction results for a set of parameters and data
