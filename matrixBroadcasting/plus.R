@@ -1,6 +1,6 @@
 
 
-#NumPy style matrix addition with broadcasting
+#NumPy style matrix addition with broadcasting '%+%'
 function(m1, m2)
 {
   require('assertthat')

@@ -21,7 +21,7 @@ ui <- fluidPage(
                       choices = c('Logistic Regression',  'Neural Net', 'Deep NN'), selected = 'Neural Net'),
          sliderInput("train_size", "Training Set Size", min = 10, max = 150, value = 100, step = 1, round = T),
          sliderInput("alpha", "Learning Rate", min = 0.001, max = 0.999, value = 0.010, step = 0.001),
-         sliderInput("num_iters", "Training Iterations", min = 5, max = 50, value = 15, step = 1),
+         sliderInput("num_iters", "Training Iterations", min = 5, max = 100, value = 15, step = 1),
         conditionalPanel(
            condition = "input.learn_method == 'Logistic Regression'",
             h4("Logistic regression differentiates between items in and out of the set"),
