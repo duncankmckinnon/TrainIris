@@ -1,6 +1,10 @@
 #Deep Neural Network Model (L-hidden layers of N_H[l] nodes)
 #Duncan McKinnonx
 
+source('matrixBroadcasting.R')
+
+#parse a dataset in a data frame into a training and sample set
+source('parseData.R')
 
 Deep_NeuralNetwork_Model <- function(XTrain, YTrain, n_h = c(5,4,3), alpha = 0.01, num_iters = 10, type = "tanH", XTest = NULL, YTest = NULL)
 {
@@ -138,30 +142,24 @@ Deep_NN_predict <- function(w, b, XTest, layers, type)
   return(an[[layers]])
 }
 
-#matrix broadcasting addition
-'%+%' <- dget('matrixBroadcasting/plus.R')
-
 #Non-linear activation functions for determining classifications based on input
 activation <- dget('activation.R')
 
-#parse a dataset in a data frame into a training and sample set
-parseModelData <- dget('parseData.R')
-
 #Generate a sample model trained to recognize the type of flower in the iris sample set.
 # "setosa" = 1, "versicolor" = 2, "virginica" = 3
-Deep_NN_Sample <- function(train_size = 100, n_h = c(5,4,3), alpha = 0.01, num_iters = 10,  act = "ReLU", type = "", raw = F)
+Deep_NN_Sample <- function(data_set = iris, xcol = c(1:4), ycol = 5, train_size = 100, test_size = 50, n_h = c(5,4,3), alpha = 0.01, num_iters = 10,  act = "ReLU", type = "", raw = F)
 {
   
-  if(train_size > 140)
+  if(train_size > dim(data_set)[1])
   {
-    train_size <- 140
+    train_size <- dim(data_set)[1] - 10
   }
-  else if(train_size < 40)
+  else if(train_size < 20)
   {
-    train_size <- 40
+    train_size <- 20
   }
   
-  dataset <- parseModelData(data_set = iris, x_cols = 1:4, y_cols = 5, train_size = train_size)
+  dataset <- parseModelData(data_set, x_cols = xcol, y_cols = ycol, train_size = train_size, test_size = test_size)
   dataset$YTrain <- as.numeric(dataset$YTrain)
   dataset$YTest <- as.numeric(dataset$YTest)
   DNNMod <- Deep_NeuralNetwork_Model(XTrain = dataset$XTrain, YTrain = dataset$YTrain, XTest = dataset$XTest, YTest = dataset$YTest, alpha = alpha, num_iters = num_iters, n_h = n_h, type = act)

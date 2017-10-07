@@ -1,4 +1,4 @@
-function(data_set, x_cols, y_cols, train_size, test_size = 0)
+parseModelData <- function(data_set, x_cols, y_cols, train_size, test_size = 0, scale_vals = F)
 {
   tot_size <- dim(data_set)[1]
   

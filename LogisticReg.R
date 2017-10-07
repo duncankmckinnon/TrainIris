@@ -1,6 +1,9 @@
 #Logistic Regression Function
 #Duncan McKinnon
 
+source('matrixBroadcasting.R')
+#parse a dataset in a data frame into a training and sample set
+source('parseData.R')
 
 LogisticRegression_Model <- function(XTrain, YTrain, alpha = 0.01, num_iters = 10, raw = F,  XTest = NULL, YTest = NULL)
 {
@@ -92,25 +95,33 @@ LRMod_predict <- function(w, b, XTest, raw = F)
 #Non-linear activation functions for determining classifications based on input
 activation <- dget('activation.R')
 
-#parse a dataset in a data frame into a training and sample set
-parseModelData <- dget('parseData.R')
 
 #Generate a sample model trained to differentiate between flowers in the iris sample set.
 #type = c("setosa", "versicolor", "virginica")
-LR_Sample <- function(train_size = 100, alpha = 0.01, num_iters = 10, raw = F, set = "versicolor", type = "")
+LR_Sample <- function(data_set = iris, xcol = 1:4, ycol = 5, train_size = 100, test_size = 50, alpha = 0.01, num_iters = 10, raw = F, set = "setosa", type = "")
 {
-  if(train_size > 140)
+  
+  
+  if(train_size > dim(data_set)[1])
   {
-    train_size <- 140
+    train_size <- dim(data_set)[1] - 10
   }
-  else if(train_size < 40)
+  else if(train_size < 20)
   {
-    train_size <- 40
+    train_size <- 20
   }
   
-  dataset <- parseModelData(data_set = iris, x_cols = 1:4, y_cols = 5, train_size = train_size)
-  dataset$YTrain <- as.numeric(dataset$YTrain %in% set)
-  dataset$YTest <- as.numeric(dataset$YTest %in% set)
+  dataset <- parseModelData(data_set, x_cols = xcol, y_cols = ycol, train_size = train_size, test_size = test_size)
+  if(typeof(set) == "closure")
+  {
+    dataset$YTrain <- as.numeric(set(dataset$YTrain))
+    dataset$YTest <- as.numeric(set(dataset$YTest))
+  }
+  else
+  {
+    dataset$YTrain <- as.numeric(dataset$YTrain %in% set)
+    dataset$YTest <- as.numeric(dataset$YTest %in% set)
+  }
   LRMod <- LogisticRegression_Model(XTrain = dataset$XTrain, YTrain = dataset$YTrain, XTest = dataset$XTest, YTest = dataset$YTest, alpha = alpha, num_iters = num_iters, raw = raw)
   
   if(type == "")

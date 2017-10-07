@@ -3,6 +3,7 @@
 
 library(shiny)
 library(plotly)
+library(RColorBrewer)
 library(magrittr)
 library(assertthat)
 source('DeepNN.R')
@@ -46,14 +47,19 @@ ui <- fluidPage(
       # Show a plot of the generated distribution
       mainPanel(
           tabsetPanel(
-           tabPanel("Performance Plot", plotlyOutput("performplot")),
-           tabPanel("Cost Plot" , plotlyOutput(outputId = "costplot")),
-           tabPanel("Perfomance Summary", tableOutput("performtable")),
+           tabPanel("Performance Plot", 
+                    plotlyOutput(outputId = "performplot")),
+           tabPanel("Cost Plot" , 
+                    plotlyOutput(outputId = "costplot")),
+           tabPanel("Perfomance Summary", 
+                    tableOutput("performtable")),
            tabPanel("Datasets and Results", 
                     h4("Training Dataset and Result"),
                     dataTableOutput("TrainingData"),
                     h4("Testing Dataset and Result"),
                     dataTableOutput("TestingData"))
+           # tabPanel("Data Representation",
+           #          plotlyOutput(outputId = "scatterMatrix"))
            )
       )
    )
@@ -105,8 +111,6 @@ server <- function(input, output) {
     output$performtable <- renderTable(
     {
       return(data.frame('Training Accuracy' = unlist(model_data()$Model['Train_Per']), 'Training Correlation' = unlist(model_data()$Model['Train_Cor']), 'Testing Accuracy' = unlist(model_data()$Model['Test_Per']), 'Testing Correlation' = unlist(model_data()$Model['Test_Cor'])))
-      #model_data()$Model['w']
-      #model_data()$Model['b']
     })
     
     output$TrainingData <- renderDataTable(
@@ -118,6 +122,17 @@ server <- function(input, output) {
     {
       return(cbind.data.frame(model_data()$XTest, "Iris_Type" = as.vector(model_data()$YTest), "Model_Result" = as.matrix(unlist(model_data()$Model['Test_Vals']), ncol = 1)))
     }, options = list(pageLength = 10))
+    
+    # output$scatterMatrix <- renderPlotly(
+    #   {
+    #     n <- plot_ly(model_data()$XTrain) %>% 
+    #          add_markers(x = ~Petal.Width, y = ~Petal.Length, symbol = model_data()$YTrain, symbols = c("circle","cross","diamond"), colors = "Spectral", color = abs(as.vector(unlist(model_data()$Model['Train_Vals'])) - model_data()$YTrain)) %>%
+    #          layout(showlegend = TRUE)
+    #     p <- plot_ly(model_data()$XTest) %>% 
+    #       add_markers(x = ~Petal.Width, y = ~Petal.Length, symbol = model_data()$YTest, symbols = c("circle","cross","diamond"), colors = "Spectral", color = abs(as.vector(unlist(model_data()$Model['Test_Vals'])) - model_data()$YTest))
+    #     return(subplot(n, p))
+    #   }
+    # )
 }
 
 # Run the application 
