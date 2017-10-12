@@ -18,11 +18,16 @@ ui <- fluidPage(
    # Sidebar with a slider input for number of bins 
    sidebarLayout(
       sidebarPanel(
+        # radioButtons("data_method", "Input or Built-in dataset", choices = c("built-in", "csv data input")),
          radioButtons("learn_method", "Learning Method", 
                       choices = c('Logistic Regression',  'Neural Net', 'Deep NN'), selected = 'Neural Net'),
          sliderInput("train_size", "Training Set Size", min = 10, max = 150, value = 100, step = 1, round = T),
          sliderInput("alpha", "Learning Rate", min = 0.001, max = 0.999, value = 0.010, step = 0.001),
-         sliderInput("num_iters", "Training Iterations", min = 5, max = 100, value = 15, step = 1),
+         sliderInput("num_iters", "Training Iterations", min = 1, max = 1000, value = 15, step = 1),
+        # conditionalPanel(
+        #   condition = "input.data_method == 'csv data input'",
+        #   fileInput("datafile", "Choose CSV file", accept = c(".csv"))
+        # ),
         conditionalPanel(
            condition = "input.learn_method == 'Logistic Regression'",
             h4("Logistic regression differentiates between items in and out of the set"),
@@ -57,9 +62,9 @@ ui <- fluidPage(
                     h4("Training Dataset and Result"),
                     dataTableOutput("TrainingData"),
                     h4("Testing Dataset and Result"),
-                    dataTableOutput("TestingData"))
-           # tabPanel("Data Representation",
-           #          plotlyOutput(outputId = "scatterMatrix"))
+                    dataTableOutput("TestingData")),
+           tabPanel("Data Representation",
+                    plotlyOutput(outputId = "scatterMatrix"))
            )
       )
    )
@@ -83,7 +88,7 @@ server <- function(input, output) {
       }
     })
   
-  
+    
     output$costplot <- renderPlotly(
     {
       cost_data <- unlist(model_data()$Model['costs'])
@@ -123,16 +128,19 @@ server <- function(input, output) {
       return(cbind.data.frame(model_data()$XTest, "Iris_Type" = as.vector(model_data()$YTest), "Model_Result" = as.matrix(unlist(model_data()$Model['Test_Vals']), ncol = 1)))
     }, options = list(pageLength = 10))
     
-    # output$scatterMatrix <- renderPlotly(
-    #   {
-    #     n <- plot_ly(model_data()$XTrain) %>% 
-    #          add_markers(x = ~Petal.Width, y = ~Petal.Length, symbol = model_data()$YTrain, symbols = c("circle","cross","diamond"), colors = "Spectral", color = abs(as.vector(unlist(model_data()$Model['Train_Vals'])) - model_data()$YTrain)) %>%
-    #          layout(showlegend = TRUE)
-    #     p <- plot_ly(model_data()$XTest) %>% 
-    #       add_markers(x = ~Petal.Width, y = ~Petal.Length, symbol = model_data()$YTest, symbols = c("circle","cross","diamond"), colors = "Spectral", color = abs(as.vector(unlist(model_data()$Model['Test_Vals'])) - model_data()$YTest))
-    #     return(subplot(n, p))
-    #   }
-    # )
+    output$scatterMatrix <- renderPlotly(
+      {
+        n <- plot_ly(model_data()$XTrain) %>%
+             add_markers(x = ~Petal.Width, y = ~Petal.Length, symbol = model_data()$YTrain, symbols = c("circle","cross","diamond"),
+                      colors = "Spectral", color = abs(as.vector(unlist(model_data()$Model['Train_Vals'])) - model_data()$YTrain)) %>%
+                      layout(title = "Error By Flower", xaxis = list("Petal Width"), yaxis = list("Petal Length"))
+        p <- plot_ly(model_data()$XTest) %>%
+          add_markers(x = ~Petal.Width, y = ~Petal.Length, symbol = model_data()$YTest, symbols = c("circle","cross","diamond"), 
+                      colors = "Spectral", color = abs(as.vector(unlist(model_data()$Model['Test_Vals'])) - model_data()$YTest)) %>%
+                      layout(title = "Error By Flower", xaxis = list("Petal Width"), yaxis = list("Petal Length"))
+        return(subplot(n, p))
+      }
+    )
 }
 
 # Run the application 

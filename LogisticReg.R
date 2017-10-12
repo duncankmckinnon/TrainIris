@@ -2,8 +2,8 @@
 #Duncan McKinnon
 
 source('matrixBroadcasting.R')
-#parse a dataset in a data frame into a training and sample set
 source('parseData.R')
+source('activation.R')
 
 LogisticRegression_Model <- function(XTrain, YTrain, alpha = 0.01, num_iters = 10, raw = F,  XTest = NULL, YTest = NULL)
 {
@@ -51,7 +51,7 @@ LogisticRegression_Model <- function(XTrain, YTrain, alpha = 0.01, num_iters = 1
   
 #run system against training results
   pred_Train <- as.matrix(LRMod_predict(vals$w, vals$b, XTrain, raw), nrow = 1)
-  accuracy_Train <- 1 - sum(abs((YTrain) - pred_Train)) / length(YTrain)
+  accuracy_Train <- 1 - sum(((YTrain) - pred_Train) ^ 2) / length(YTrain)
   cor_Train <- cor.test(YTrain, pred_Train)$estimate
   
   LRMod <- list("w" = vals$w, "b" = vals$b, "costs" = vals$costs, "is_diff" = raw, "Train_Per" = accuracy_Train, "Train_Cor" = cor_Train, "Train_Vals" = pred_Train)
@@ -62,7 +62,7 @@ LogisticRegression_Model <- function(XTrain, YTrain, alpha = 0.01, num_iters = 1
     XTest <- as.matrix(XTest)
     YTest <- as.matrix(YTest)  
     pred_Test <- as.matrix(LRMod_predict(vals$w, vals$b, XTest, raw), nrow = 1)
-    accuracy_Test <- 1 - sum(abs((YTest) - pred_Test)) / length(YTest)
+    accuracy_Test <- 1 - sum(((YTest) - pred_Test) ^ 2) / length(YTest)
     cor_Test <- cor.test(YTest, pred_Test)$estimate
     LRMod[["Test_Per"]] = accuracy_Test
     LRMod[["Test_Cor"]] = cor_Test
@@ -76,7 +76,7 @@ LogisticRegression_Model <- function(XTrain, YTrain, alpha = 0.01, num_iters = 1
 Predict <- function(LRMod, XTest, YTest, raw = F)
 {
   pred_Test <- as.matrix(LRMod_predict(LRMod$w, LRMod$b, XTest, raw), nrow = 1)
-  accuracy_Test <- 1 - sum(abs((YTest) - pred_Test)) / length(YTest)
+  accuracy_Test <- 1 - sum(((YTest) - pred_Test) ^ 2) / length(YTest)
   cor_Test <- cor.test(YTest, pred_Test)$estimate
   predModel <- list("values" = pred_Test, "Accuracy" = accuracy_Test, "Correlation" = cor_Test)
   return(predModel)
@@ -92,13 +92,10 @@ LRMod_predict <- function(w, b, XTest, raw = F)
   return(activation(XTest %*% w + b, type = "sigmoid"))
 }
 
-#Non-linear activation functions for determining classifications based on input
-activation <- dget('activation.R')
-
 
 #Generate a sample model trained to differentiate between flowers in the iris sample set.
 #type = c("setosa", "versicolor", "virginica")
-LR_Sample <- function(data_set = iris, xcol = 1:4, ycol = 5, train_size = 100, test_size = 50, alpha = 0.01, num_iters = 10, raw = F, set = "setosa", type = "")
+LR_Sample <- function(data_set = iris, xcol = 1:4, ycol = 5, train_size = 100, test_size = 50, alpha = 0.01, num_iters = 10, raw = F, set = "setosa", type = "", regularize = F)
 {
   
   

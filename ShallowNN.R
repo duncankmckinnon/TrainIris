@@ -2,11 +2,10 @@
 #Duncan McKinnonx
 
 source('matrixBroadcasting.R')
-
-#parse a dataset in a data frame into a training and sample set
 source('parseData.R')
+source('activation.R')
 
-NeuralNetwork_Model <- function(XTrain, YTrain, n_h = 4, alpha = 0.01, num_iters = 10, type = "tanH", XTest = NULL, YTest = NULL)
+NeuralNetwork_Model <- function(XTrain, YTrain, n_h = 4, alpha = 0.01, num_iters = 10, type = "tanH", XTest = NULL, YTest = NULL, regularize = F)
 {
 #internal model function to perform gradient descent optimization on weights and offset
   NN_optimize <- function(w, b, XTrain, YTrain, alpha, num_iters, type)
@@ -80,7 +79,8 @@ NeuralNetwork_Model <- function(XTrain, YTrain, n_h = 4, alpha = 0.01, num_iters
   
 #get predictions and accuracy for training examples
   pred_Train <- as.matrix(NN_predict(vals$w, vals$b, XTrain, type), nrow = 1)
-  accuracy_Train <- 1 - sum(abs(t(YTrain) - pred_Train)) / length(YTrain)
+  accuracy_Train <- 1 - sum((t(YTrain) - pred_Train) ^ 2) / length(YTrain)
+  YTrain <- ifelse(is.na(YTrain), 0, YTrain)
   cor_Train <- cor.test(t(YTrain), pred_Train)$estimate
     
   NNModel <- list("w" = vals$w, "b" = vals$b, "costs" = vals$costs, "activation" = type, "Train_Per" = accuracy_Train, "Train_Cor" = cor_Train, "Train_Vals" = pred_Train)
@@ -91,7 +91,8 @@ NeuralNetwork_Model <- function(XTrain, YTrain, n_h = 4, alpha = 0.01, num_iters
     XTest <- t(as.matrix(XTest))
     YTest <- as.matrix(YTest)
     pred_Test <- as.matrix(NN_predict(vals$w, vals$b, XTest, type), nrow = 1)
-    accuracy_Test <-  1 - sum(abs(t(YTest) - pred_Test)) / length(YTest)
+    accuracy_Test <-  1 - sum((t(YTest) - pred_Test) ^ 2) / length(YTest)
+    YTest <- ifelse(is.na(YTest), 0, YTest)
     cor_Test <- cor.test(t(YTest), pred_Test)$estimate
     NNModel[["Test_Per"]] = accuracy_Test
     NNModel[["Test_Cor"]] = cor_Test
@@ -104,7 +105,8 @@ NeuralNetwork_Model <- function(XTrain, YTrain, n_h = 4, alpha = 0.01, num_iters
 Predict_SNN <- function(NNModel, XTest, YTest)
 {
   pred <- NN_predict(NNModel$w, NNModel$b, XTest, YTest, NNModel$activation)
-  accuracy_Test <-  1 - sum(abs(t(YTest) - pred_Test)) / length(YTest)
+  accuracy_Test <-  1 - sum((t(YTest) - pred_Test) ^ 2) / length(YTest)
+  YTest <- ifelse(is.na(YTest), 0, YTest)
   cor_Test <- cor.test(t(YTest), pred_Test)$estimate
   predModel <- list("Values" = pred, "Accuracy" = accuracy_Test, "Correlation" = cor_Test)
   return(predModel)
@@ -123,9 +125,6 @@ NN_predict <- function(w, b, XTest, type)
   
   return(a2)
 }
-
-#Non-linear activation functions for determining classifications based on input
-activation <- dget('activation.R')
 
 #Generate a sample model trained to recognize the type of flower in the iris sample set.
 # "setosa" = 1, "versicolor" = 2, "virginica" = 3

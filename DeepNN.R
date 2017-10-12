@@ -2,11 +2,10 @@
 #Duncan McKinnonx
 
 source('matrixBroadcasting.R')
-
-#parse a dataset in a data frame into a training and sample set
 source('parseData.R')
+source('activation.R')
 
-Deep_NeuralNetwork_Model <- function(XTrain, YTrain, n_h = c(5,4,3), alpha = 0.01, num_iters = 10, type = "tanH", XTest = NULL, YTest = NULL)
+Deep_NeuralNetwork_Model <- function(XTrain, YTrain, n_h = c(5,4,3), alpha = 0.01, num_iters = 10, type = "tanH", XTest = NULL, YTest = NULL, regularize = F)
 {
   #internal model function to perform gradient descent optimization on weights and offset
   Deep_NN_optimize <- function(w, b, XTrain, YTrain, nlayers, alpha, num_iters, type)
@@ -93,7 +92,7 @@ Deep_NeuralNetwork_Model <- function(XTrain, YTrain, n_h = c(5,4,3), alpha = 0.0
   
   #get predictions and accuracy for training examples
   pred_Train <- as.matrix(Deep_NN_predict(vals$w, vals$b, XTrain, n, type), nrow = 1)
-  accuracy_Train <- 1 - sum(abs(t(YTrain) - pred_Train)) / length(YTrain)
+  accuracy_Train <- 1 - sum((t(YTrain) - pred_Train) ^ 2) / length(YTrain)
   cor_Train <- cor.test(t(YTrain), pred_Train)$estimate
   
   NNModel <- list("w" = vals$w, "b" = vals$b, "costs" = vals$costs, "activation" = type, "Train_Per" = accuracy_Train, "Train_Cor" = cor_Train, "Train_Vals" = pred_Train)
@@ -104,7 +103,7 @@ Deep_NeuralNetwork_Model <- function(XTrain, YTrain, n_h = c(5,4,3), alpha = 0.0
     XTest <- t(as.matrix(XTest))
     YTest <- as.matrix(YTest)
     pred_Test <- as.matrix(Deep_NN_predict(vals$w, vals$b, XTest, n, type), nrow = 1)
-    accuracy_Test <- 1 - sum(abs(t(YTest) - pred_Test)) / length(YTest)
+    accuracy_Test <- 1 - sum((t(YTest) - pred_Test) ^ 2) / length(YTest)
     cor_Test <- cor.test(t(YTest), pred_Test)$estimate
     NNModel[["Test_Per"]] = accuracy_Test
     NNModel[["Test_Cor"]] = cor_Test
@@ -117,7 +116,7 @@ Deep_NeuralNetwork_Model <- function(XTrain, YTrain, n_h = c(5,4,3), alpha = 0.0
 Predict_DNN <- function(Deep_NNModel, XTest, YTest)
 {
   pred <- Deep_NN_predict(Deep_NNModel$w, Deep_NNModel$b, XTest, YTest, Deep_NNModel$activation)
-  accuracy_Test <-  1 - sum(abs(t(YTest) - pred_Test)) / length(YTest)
+  accuracy_Test <-  1 - sum((t(YTest) - pred_Test) ^ 2) / length(YTest)
   cor_Test <- cor.test(t(YTest), pred_Test)$estimate
   predModel <- list("Values" = pred, "Accuracy" = accuracy_Test, "Correlation" = cor_Test)
   return(predModel)
@@ -141,9 +140,6 @@ Deep_NN_predict <- function(w, b, XTest, layers, type)
   }
   return(an[[layers]])
 }
-
-#Non-linear activation functions for determining classifications based on input
-activation <- dget('activation.R')
 
 #Generate a sample model trained to recognize the type of flower in the iris sample set.
 # "setosa" = 1, "versicolor" = 2, "virginica" = 3
