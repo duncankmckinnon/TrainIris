@@ -1,26 +1,26 @@
 
 #Non-linear activation functions for determining classifications based on input
-activation <- function(z, type = c("sigmoid", "tanH", "ReLU"), deriv = F, n = 1, R_leaky = T)
+activation <- function(z, type = c("sigmoid", "tanh", "relu", "l_relu"), deriv = F, n = 1, R_leaky = T)
 {
   if(!deriv)
   {
     if(type[n] == "sigmoid"){return(g_sigmoid(z))}
     
-    if(type[n] == "tanH"){return(g_tanh(z))}
+    if(type[n] == "tanh"){return(g_tanh(z))}
     
-    if(type[n] == "ReLU"){return(g_relu(z, leaky = R_leaky))}
+    if(type[n] == "relu"){return(g_relu(z, leaky = R_leaky))}
     
-    if(type[n] == "Leaky_ReLU"){return(g_relu(z))}
+    if(type[n] == "l_relu"){return(g_relu(z))}
     return(ifelse(z >= 0, 1, 0))
   }else
   {
     if(type[n] == "sigmoid"){return(g_sigmoid(z, deriv = T))}
     
-    if(type[n] == "tanH"){return(g_tanh(z, deriv = T))}
+    if(type[n] == "tanh"){return(g_tanh(z, deriv = T))}
     
-    if(type[n] == "ReLU"){return(g_relu(z, deriv = T, leaky = R_leaky))}
+    if(type[n] == "relu"){return(g_relu(z, deriv = T, leaky = R_leaky))}
     
-    if(type[n] == "Leaky_ReLU"){return(g_relu(z))}
+    if(type[n] == "l_relu"){return(g_relu(z))}
     return(0)
   }
 }

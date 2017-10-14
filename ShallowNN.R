@@ -5,7 +5,7 @@ source('matrixBroadcasting.R')
 source('parseData.R')
 source('activation.R')
 
-NeuralNetwork_Model <- function(XTrain, YTrain, n_h = 4, alpha = 0.01, num_iters = 10, type = "tanH", XTest = NULL, YTest = NULL, regularize = F)
+NeuralNetwork_Model <- function(XTrain, YTrain, n_h = 4, alpha = 0.01, num_iters = 10, type = "relu", XTest = NULL, YTest = NULL, regularize = F)
 {
 #internal model function to perform gradient descent optimization on weights and offset
   NN_optimize <- function(w, b, XTrain, YTrain, alpha, num_iters, type)
@@ -128,7 +128,7 @@ NN_predict <- function(w, b, XTest, type)
 
 #Generate a sample model trained to recognize the type of flower in the iris sample set.
 # "setosa" = 1, "versicolor" = 2, "virginica" = 3
-NN_Sample <- function(data_set = iris, xcol = c(1:4), ycol = 5, train_size = 100, test_size = 50, n_h = 5, alpha = 0.01, num_iters = 10, act= "ReLU", type = "", raw = F)
+NN_Sample <- function(data_set = iris, xcol = c(1:4), ycol = 5, train_size = 100, test_size = 50, n_h = 5, alpha = 0.01, num_iters = 10, act= "relu", type = "", raw = F)
 {
   
   if(train_size > dim(data_set)[1])

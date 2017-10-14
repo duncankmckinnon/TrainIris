@@ -42,7 +42,8 @@ ui <- fluidPage(
            condition = "input.learn_method == 'Deep NN'",
            h4("Deep neural network trains through several layers of neurons with the same activation functions"),
            numericInput("n_hDNN", "Nuerons", value = 5, min = 2, max = 20, step = 1),
-           radioButtons("layers", "Hidden Layers", choices = c(1, 2, 3, 4, 5), selected = 3)
+           radioButtons("layers", "Hidden Layers", choices = c(1, 2, 3, 4, 5), selected = 3),
+           checkboxInput("use_momentum", "with Momentum", value = F)
          ),
          h4("Display categorized training result or raw training estimates"),
          checkboxInput("rawOut", "Categorized/Raw", value = F),
@@ -80,11 +81,11 @@ server <- function(input, output) {
       }
       else if(input$learn_method == "Neural Net")
       {
-        return(NN_Sample(train_size = input$train_size, n_h = input$n_hNN, alpha = input$alpha, num_iters = input$num_iters, act = "ReLU", raw = input$rawOut))
+        return(NN_Sample(train_size = input$train_size, n_h = input$n_hNN, alpha = input$alpha, num_iters = input$num_iters, act = "relu", raw = input$rawOut))
       } 
       else if(input$learn_method == "Deep NN")
       { 
-        return(Deep_NN_Sample(train_size = input$train_size, n_h = array(input$n_hDNN, input$layers), alpha = input$alpha, num_iters = input$num_iters, act = "ReLU", raw = input$rawOut))
+        return(Deep_NN_Sample(train_size = input$train_size, n_h = array(input$n_hDNN, input$layers), alpha = input$alpha, num_iters = input$num_iters, act = "relu", raw = input$rawOut, momentum = input$use_momentum))
       }
     })
   
@@ -130,13 +131,24 @@ server <- function(input, output) {
     
     output$scatterMatrix <- renderPlotly(
       {
+        species <- c("Setosa", "Versicolor", "Virginica")
         n <- plot_ly(model_data()$XTrain) %>%
              add_markers(x = ~Petal.Width, y = ~Petal.Length, symbol = model_data()$YTrain, symbols = c("circle","cross","diamond"),
-                      colors = "Spectral", color = abs(as.vector(unlist(model_data()$Model['Train_Vals'])) - model_data()$YTrain)) %>%
+                      colors = "Spectral", color = abs(as.vector(unlist(model_data()$Model['Train_Vals'])) - model_data()$YTrain),
+                      text = ~paste("Species = ", species[model_data()$YTrain],
+                                    "</br>Sepal Length = ", Sepal.Length,
+                                    "</br>Petal Length = ", Petal.Length,
+                                    "</br>Sepal Width = ", Sepal.Width,
+                                    "</br>Petal Width = ", Petal.Width)) %>%
                       layout(title = "Error By Flower", xaxis = list("Petal Width"), yaxis = list("Petal Length"))
         p <- plot_ly(model_data()$XTest) %>%
           add_markers(x = ~Petal.Width, y = ~Petal.Length, symbol = model_data()$YTest, symbols = c("circle","cross","diamond"), 
-                      colors = "Spectral", color = abs(as.vector(unlist(model_data()$Model['Test_Vals'])) - model_data()$YTest)) %>%
+                      colors = "Spectral", color = abs(as.vector(unlist(model_data()$Model['Test_Vals'])) - model_data()$YTest),
+                      text = ~paste("Species = ", species[model_data()$YTest],
+                                   "</br>Sepal Length = ", Sepal.Length,
+                                   "</br>Petal Length = ", Petal.Length,
+                                   "</br>Sepal Width = ", Sepal.Width,
+                                   "</br>Petal Width = ", Petal.Width)) %>%
                       layout(title = "Error By Flower", xaxis = list("Petal Width"), yaxis = list("Petal Length"))
         return(subplot(n, p))
       }
